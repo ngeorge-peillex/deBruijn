@@ -1,18 +1,31 @@
 import System.Environment
 import System.Exit
+import Numeric.Natural
+import Data.List
+import Data.Char
 
 main = getArgs >>= parse >>= putStr
 
-parse [int, string, "--check"]  = checkAlpha    >> exit
-parse [int, string, "--unique"] = uniqueAlpha    >> exit
-parse [int, string, "--clean"]  = cleanAlpha    >> exit
-parse [int, "--check"]  = check    >> exit
-parse [int, "--unique"] = unique    >> exit
-parse [int, "--clean"]  = clean    >> exit
-parse ["-h"]    = usage     >> exit
-parse []        = usage     >> exitError
-parse otherwise = usage     >> exitError
+sortString :: String -> String
+sortString alphabet = map toLower (alphabet ++ "e")
 
+parse [n, alphabet, "--unique"] = putStrLn (sortString alphabet) >> checkNumber n >> uniqueAlpha  >> exit
+parse [n, alphabet, "--check"]  = checkNumber n >> checkAlpha    >> exit
+parse [n, alphabet, "--clean"]  = checkNumber n >> cleanAlpha    >> exit
+parse [n, "--unique"] = checkNumber n >> unique  >> exit
+parse [n, "--check"]  = checkNumber n >> check   >> exit
+parse [n, "--clean"]  = checkNumber n >> clean   >> exit
+parse ["-h"]    = usage >> exit
+parse otherwise = usage >> exitError
+
+
+checkNumber n = do
+    if checkIsNumber n ==  True && n /= "0" then return n else usage >> exitError
+
+checkIsNumber :: String -> Bool
+checkIsNumber n = case (reads n) :: [(Natural, String)] of
+    [(_, "")] -> True
+    _         -> False
 
 checkAlpha  = putStrLn "checkAlpha"
 check       = putStrLn "check"
