@@ -19,6 +19,9 @@ $(NAME):
 	@$(CC) build
 	@cp `stack path --local-install-root`/bin/deBruijn-exe $(ROOT)$@
 
+setup:
+	@$(CC) setup
+
 clean:
 	$(CC) clean
 
