@@ -6,10 +6,7 @@ import Data.Char
 
 main = getArgs >>= parse >>= putStr
 
-sortString :: String -> String
-sortString alphabet = map toLower (alphabet ++ "e")
-
-parse [n, alphabet, "--unique"] = putStrLn (sortString alphabet) >> checkNumber n >> uniqueAlpha  >> exit
+parse [n, alphabet, "--unique"] = checkNumber n >> uniqueAlpha  >> exit
 parse [n, alphabet, "--check"]  = checkNumber n >> checkAlpha    >> exit
 parse [n, alphabet, "--clean"]  = checkNumber n >> cleanAlpha    >> exit
 parse [n, "--unique"] = checkNumber n >> unique  >> exit
