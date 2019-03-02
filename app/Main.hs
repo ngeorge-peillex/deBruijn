@@ -11,46 +11,38 @@ parse [n, alphabet, "--unique"] = do
     nbr <- checkNumber n
     let a = rotate alphabet
     unique nbr a
-    exit
 
 parse [n, alphabet, "--check"] = do
     nbr <- checkNumber n
     check nbr alphabet
-    exit
 
 parse [n, alphabet, "--clean"] = do
     nbr <- checkNumber n
     clean alphabet
-    exit
 
 parse [n, "--unique"] = do
     nbr <- checkNumber n
     unique nbr "01"
-    exit
 
 parse [n, "--check"] = do
     nbr <- checkNumber n
     check nbr "01"
-    exit
 
 parse [n, "--clean"] = do
     nbr <- checkNumber n
     clean "01"
-    exit
 parse ["-h"] = do
     usage
-    exit
 
 parse otherwise = do
     usage
     exitError
 
-
 allUnique ::(Eq a) => [a] -> Bool
 allUnique [] = True
 allUnique (x:xs) = x `notElem` xs && allUnique xs
 
-rotate :: [a] -> [a]
+rotate :: String -> String
 rotate xs = take (length xs) (drop 1 (cycle xs))
                                                                                                         
 expectLength :: String -> Natural -> Int                                                                    
@@ -89,21 +81,36 @@ isDebruijn sizeAlpha nbr array =
         exceptSize = sizeAlpha ^ nbr
         arraySize = length (nub array)
 
+areDebruijn :: Int -> String -> String -> Bool
+areDebruijn nbr alphabet xs =
+    isDebruijn size nbr xs'
+    where
+        size = length alphabet
+        xs' = (splitString nbr xs [])
+
+
 printOKorKO :: Bool -> IO ()
 printOKorKO result =
     if result == True then putStrLn "OK" else putStrLn "KO"
 
 check :: Int -> String -> IO ()
 check nbr alphabet = do
-    let list = []
     input <- getLine
-    printOKorKO $ isDebruijn (length alphabet) nbr (splitString nbr input list)
+    printOKorKO $ isDebruijn (length alphabet) nbr (splitString nbr input [])
+
+isUnique :: String -> String -> Int-> Bool
+isUnique reference other index
+    | reference == other = False
+    | index == length reference = True
+    | otherwise = isUnique reference rotateString (index + 1)
+    where
+        rotateString = rotate other
 
 unique :: Int -> String -> IO ()
 unique nbr alphabet = do
-    putStrLn "unique"
-    putStrLn (show nbr)
-    putStrLn (alphabet)
+    reference <- getLine
+    other <- getLine
+    printOKorKO $ (areDebruijn nbr alphabet reference && areDebruijn nbr alphabet other && isUnique reference other 0)
 
 clean :: String -> IO ()
 clean alphabet = do
