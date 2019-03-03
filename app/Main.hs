@@ -157,8 +157,8 @@ clean nbr alphabet = do
 
 addAlpha :: Int -> String -> String -> String
 addAlpha nbr alphabet xs
-    | isInfixOf ((drop ((length xs) - (nbr - 1)) xs) ++ [head alphabet]) xs = [last alphabet]
-    | otherwise = [head alphabet]
+    | isInfixOf ((drop ((length xs) - (nbr - 1)) xs) ++ [last alphabet]) xs = [head alphabet]
+    | otherwise = [last alphabet]  
 
 preferOne :: Int -> String -> String -> String
 preferOne nbr alphabet xs
