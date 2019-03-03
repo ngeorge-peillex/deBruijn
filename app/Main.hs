@@ -18,7 +18,7 @@ parse [n, alphabet, "--check"] = do
 
 parse [n, alphabet, "--clean"] = do
     nbr <- checkNumber n
-    clean alphabet
+    clean nbr alphabet
 
 parse [n, "--unique"] = do
     nbr <- checkNumber n
@@ -30,7 +30,7 @@ parse [n, "--check"] = do
 
 parse [n, "--clean"] = do
     nbr <- checkNumber n
-    clean "01"
+    clean nbr "01"
 parse ["-h"] = do
     usage
 
@@ -63,9 +63,6 @@ checkInput (x:xs) alphabet
     | x `elem` alphabet && checkInput xs alphabet = True
     | otherwise = False
 
-printElements :: [String] -> IO ()
-printElements = mapM_ putStrLn
-
 splitString :: Int -> String -> [String] -> [String]
 splitString nbr input xs
     | xs == [] = splitString nbr tmp ((take nbr input) : xs)
@@ -88,6 +85,8 @@ areDebruijn nbr alphabet xs =
         size = length alphabet
         xs' = (splitString nbr xs [])
 
+printNewLine :: Show a => a -> IO ()
+printNewLine x = putStrLn (show x)
 
 printOKorKO :: Bool -> IO ()
 printOKorKO result =
@@ -112,10 +111,21 @@ unique nbr alphabet = do
     other <- getLine
     printOKorKO $ (areDebruijn nbr alphabet reference && areDebruijn nbr alphabet other && isUnique reference other 0)
 
-clean :: String -> IO ()
-clean alphabet = do
-    putStrLn "clean"
-    putStrLn (alphabet)
+getLineUntil :: [String] -> IO [String]
+getLineUntil array = do
+    line <- getLine
+    case line of
+        "END" -> return $ reverse array
+        _ -> getLineUntil (line : array)
+
+removeNonDebruin :: [String] -> IO ()
+removeNonDebruin array = do
+    putStr ( unlines (nubBy (\x y -> isUnique x y 0 == False) array) )
+
+clean :: Int -> String -> IO ()
+clean nbr alphabet = do
+    lines <- getLineUntil []
+    removeNonDebruin (filter (\x -> areDebruijn nbr alphabet x) lines)
 
 usage :: IO ()
 usage   = putStrLn "USAGE: ./deBruijn n [a] [--check|--unique|--clean]\n\t--check\t\tcheck if a sequence is a de Bruijn sequence\n\t--unique\tcheck if 2 sequences are distinct de Bruijn sequences\n\t--clean\t\tlist cleaning\n\tn\t\torder of the sequence\n\ta\t\talphabet [def: “01”]"
