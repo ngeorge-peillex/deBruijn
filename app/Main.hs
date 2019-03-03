@@ -7,6 +7,8 @@ import Data.Char
 main = do
     getArgs >>= parse
 
+-- PARSING ARGS ------------------------------------------
+
 parse [n, alphabet, "--unique"] = do
     nbr <- checkNumber n
     let a = rotate alphabet
@@ -31,12 +33,23 @@ parse [n, "--check"] = do
 parse [n, "--clean"] = do
     nbr <- checkNumber n
     clean nbr "01"
+
+parse [n, alphabet] = do
+    nbr <- checkNumber n
+    generation nbr alphabet
+    
 parse ["-h"] = do
-    usage
+        usage
+
+parse [n] = do
+    nbr <- checkNumber n
+    generation nbr "01"
 
 parse otherwise = do
     usage
     exitError
+
+-- TOOLS ---------------------------------------------------
 
 allUnique ::(Eq a) => [a] -> Bool
 allUnique [] = True
@@ -71,6 +84,22 @@ splitString nbr input xs
     where
         tmp = input ++ (take (nbr - 1) input)
 
+printNewLine :: Show a => a -> IO ()
+printNewLine x = putStrLn (show x)
+
+printOKorKO :: Bool -> IO ()
+printOKorKO result =
+    if result == True then putStrLn "OK" else putStrLn "KO"
+
+
+usage :: IO ()
+usage   = putStrLn "USAGE: ./deBruijn n [a] [--check|--unique|--clean]\n\t--check\t\tcheck if a sequence is a de Bruijn sequence\n\t--unique\tcheck if 2 sequences are distinct de Bruijn sequences\n\t--clean\t\tlist cleaning\n\tn\t\torder of the sequence\n\ta\t\talphabet [def: “01”]"
+
+exitError   = exitWith (ExitFailure 84)
+exit        = exitWith ExitSuccess
+
+-- CHECK ----------------------------------------------------
+
 isDebruijn :: Int -> Int -> [String] -> Bool
 isDebruijn sizeAlpha nbr array =
     if arraySize == exceptSize then True else False
@@ -85,17 +114,12 @@ areDebruijn nbr alphabet xs =
         size = length alphabet
         xs' = (splitString nbr xs [])
 
-printNewLine :: Show a => a -> IO ()
-printNewLine x = putStrLn (show x)
-
-printOKorKO :: Bool -> IO ()
-printOKorKO result =
-    if result == True then putStrLn "OK" else putStrLn "KO"
-
 check :: Int -> String -> IO ()
 check nbr alphabet = do
     input <- getLine
     printOKorKO $ isDebruijn (length alphabet) nbr (splitString nbr input [])
+
+-- UNIQUE -------------------------------------------------
 
 isUnique :: String -> String -> Int-> Bool
 isUnique reference other index
@@ -110,6 +134,8 @@ unique nbr alphabet = do
     reference <- getLine
     other <- getLine
     printOKorKO $ (areDebruijn nbr alphabet reference && areDebruijn nbr alphabet other && isUnique reference other 0)
+
+-- CLEAN --------------------------------------------------
 
 getLineUntil :: [String] -> IO [String]
 getLineUntil array = do
@@ -127,8 +153,22 @@ clean nbr alphabet = do
     lines <- getLineUntil []
     removeNonDebruin (filter (\x -> areDebruijn nbr alphabet x) lines)
 
-usage :: IO ()
-usage   = putStrLn "USAGE: ./deBruijn n [a] [--check|--unique|--clean]\n\t--check\t\tcheck if a sequence is a de Bruijn sequence\n\t--unique\tcheck if 2 sequences are distinct de Bruijn sequences\n\t--clean\t\tlist cleaning\n\tn\t\torder of the sequence\n\ta\t\talphabet [def: “01”]"
+-- GENERATION ---------------------------------------------
 
-exitError   = exitWith (ExitFailure 84)
-exit        = exitWith ExitSuccess
+addAlpha :: Int -> String -> String -> String
+addAlpha nbr alphabet xs
+    | isInfixOf ((drop ((length xs) - (nbr - 1)) xs) ++ [head alphabet]) xs = [last alphabet]
+    | otherwise = [head alphabet]
+
+preferOne :: Int -> String -> String -> String
+preferOne nbr alphabet xs
+    | length xs < nbr = preferOne nbr alphabet (xs ++ [head alphabet])
+    | length xs < fullLength = preferOne nbr alphabet (xs ++ (addAlpha nbr alphabet xs))
+    | otherwise = xs
+    where
+        fullLength = length alphabet ^ nbr
+
+generation :: Int -> String -> IO ()
+generation nbr alphabet
+    | length alphabet /= 2 = print (alphabet)
+    | otherwise = print $ preferOne nbr alphabet []
