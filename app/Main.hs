@@ -11,16 +11,21 @@ main = do
 
 parse [n, alphabet, "--unique"] = do
     nbr <- checkNumber n
-    let a = rotate alphabet
-    unique nbr a
+    if allUnique alphabet
+        then unique nbr alphabet
+        else usage >> exitError
 
 parse [n, alphabet, "--check"] = do
     nbr <- checkNumber n
-    check nbr alphabet
+    if allUnique alphabet
+        then check nbr alphabet
+        else usage >> exitError
 
 parse [n, alphabet, "--clean"] = do
     nbr <- checkNumber n
-    clean nbr alphabet
+    if allUnique alphabet
+        then clean nbr alphabet
+        else usage >> exitError
 
 parse [n, "--unique"] = do
     nbr <- checkNumber n
@@ -36,7 +41,9 @@ parse [n, "--clean"] = do
 
 parse [n, alphabet] = do
     nbr <- checkNumber n
-    generation nbr alphabet
+    if allUnique alphabet
+        then generation nbr alphabet
+        else usage >> exitError
     
 parse ["-h"] = do
         usage
@@ -57,9 +64,6 @@ allUnique (x:xs) = x `notElem` xs && allUnique xs
 
 rotate :: String -> String
 rotate xs = take (length xs) (drop 1 (cycle xs))
-                                                                                                        
-expectLength :: String -> Natural -> Int                                                                    
-expectLength alphabet n = (length alphabet) ^ n 
 
 checkNumber :: String -> IO (Int)
 checkNumber n = do
@@ -70,12 +74,6 @@ checkIsNumber n = case (reads n) :: [(Natural, String)] of
     [(_, "")] -> True
     _         -> False
 
-checkInput :: String -> String -> Bool
-checkInput []  alphabet = True
-checkInput (x:xs) alphabet
-    | x `elem` alphabet && checkInput xs alphabet = True
-    | otherwise = False
-
 splitString :: Int -> String -> [String] -> [String]
 splitString nbr input xs
     | xs == [] = splitString nbr tmp ((take nbr input) : xs)
@@ -83,9 +81,6 @@ splitString nbr input xs
     | otherwise = splitString nbr (drop 1 input) ((take nbr input) : xs)
     where
         tmp = input ++ (take (nbr - 1) input)
-
-printNewLine :: Show a => a -> IO ()
-printNewLine x = putStrLn (show x)
 
 printOKorKO :: Bool -> IO ()
 printOKorKO result =
@@ -171,4 +166,4 @@ preferOne nbr alphabet xs
 generation :: Int -> String -> IO ()
 generation nbr alphabet
     | length alphabet /= 2 = print (alphabet)
-    | otherwise = print $ preferOne nbr alphabet []
+    | otherwise = putStrLn $ preferOne nbr alphabet []
